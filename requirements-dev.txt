@@ -1,0 +1,5 @@
+flake8
+pytest
+tox
+watchdog[watchmedo] >= 0.10.2
+-r requirements.txt
