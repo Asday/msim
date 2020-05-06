@@ -1,5 +1,8 @@
 flake8
 pytest
+pytest-django
+pytest-pythonpath
 tox
-watchdog[watchmedo] >= 0.10.2
+tox-pip-extensions
+watchdog[watchmedo]
 -r requirements.txt

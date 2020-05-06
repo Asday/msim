@@ -8,3 +8,9 @@ pip install -r requirements-dev.txt
 # Running tests
 
 `tox --parallel all`.
+
+# Running the project
+
+```shell
+./manage runserver 54748
+```
