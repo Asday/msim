@@ -1,0 +1,15 @@
+{% load humanize %}
+
+<tr>
+  <td>{{ year }}-{{ month|stringformat:"02d" }}</td>
+  <td>{{ opening_balance|intcomma }}</td>
+  <td>{{ interest|intcomma }}</td>
+  <td>{{ payment|intcomma }}</td>
+  <td>
+    {% include "mortgages/_ledgerentryamount.html" with amount=overpayment %}
+  </td>
+  <td>
+    {% include "mortgages/_ledgerentryamount.html" with amount=discrepancy %}
+  </td>
+  <td>{{ closing_balance|intcomma }}</td>
+</tr>
