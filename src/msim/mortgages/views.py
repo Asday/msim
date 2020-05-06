@@ -105,7 +105,6 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
                     entry.discrepancy = Decimal(discrepancy)
                     entry.discrepancy_in_get = True
 
-
             entry.normalise()
 
             balance = entry.closing_balance
