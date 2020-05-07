@@ -5,6 +5,8 @@
 {% block content %}
   <h1>{{ mortgage }}</h1>
 
+  <p><a href="{% url 'mortgages:list' %}">&lt; Mortgages</a></p>
+
   <table>
     <thead>
       <th>End date</th>
