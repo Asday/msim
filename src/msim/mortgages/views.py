@@ -61,6 +61,11 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
         }
 
 
+class MortgageDelete(LoginRequiredMixin, OwnerMixin, DeleteView):
+    model = Mortgage
+    success_url = reverse_lazy("mortgages:list")
+
+
 class AmountOwnerMixin:
 
     def get_queryset(self):

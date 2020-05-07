@@ -36,6 +36,10 @@
       {{ entry.as_tr }}
     {% endfor %}
   </table>
+
+  <a href="{% url 'mortgages:delete' pk=mortgage.pk %}">
+    Delete this mortgage
+  </a>
 {% endblock %}
 
 {% block js %}
