@@ -11,8 +11,6 @@ class AmountCreateUpdate(forms.Form):
     def __init__(self, *args, model, **kwargs):
         super().__init__(*args, **kwargs)
 
-        print(kwargs)
-
         self.model = model
 
     def save(self):
