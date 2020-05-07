@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     DiscrepancyDelete,
     DiscrepancyCreateUpdate,
+    MortgageCreate,
     MortgageDetail,
     MortgageList,
     OverpaymentDelete,
@@ -13,6 +14,7 @@ from .views import (
 app_name = "mortgages"
 urlpatterns = [
     path("", MortgageList.as_view(), name="list"),
+    path("create", MortgageCreate.as_view(), name="create"),
     path("<int:pk>", MortgageDetail.as_view(), name="detail"),
     path(
         "<int:pk>/overpayments/",

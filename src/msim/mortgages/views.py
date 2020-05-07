@@ -3,10 +3,36 @@ import json
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView, DetailView, FormView, ListView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    FormView,
+    ListView,
+)
 
 from . import forms
 from .models import Discrepancy, Ledger, Mortgage, Overpayment
+
+
+class MortgageCreate(LoginRequiredMixin, CreateView):
+    model = Mortgage
+    fields = [
+        "start_year",
+        "start_month",
+        "amount",
+        "term",
+        "initial_period",
+        "interest_rate_initial",
+        "interest_rate_thereafter",
+        "income",
+        "expenditure",
+    ]
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+
+        return super().form_valid(form)
 
 
 class OwnerMixin:

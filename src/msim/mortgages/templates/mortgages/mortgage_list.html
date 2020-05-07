@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
+  <h1>Mortgages</h1>
+
+  <p>
+    <a href="{% url 'mortgages:create' %}">Create new</a>
   {% for mortgage in mortgage_list %}
     <p><a href="{{ mortgage.get_absolute_url }}">{{ mortgage }}</a></p>
   {% empty %}
