@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -59,36 +61,37 @@ class Mortgage(models.Model):
     def get_absolute_url(self):
         return reverse("mortgages:detail", kwargs={"pk": self.pk})
 
-    @property
-    def interest_rates(self):
-        return {
-            True: self.interest_rate_initial,
-            False: self.interest_rate_thereafter,
-        }
-
-    def get_payment_amounts(self):
+    def as_periods(self):
         try:
-            initial = self.actualinitialpayment.amount
+            payment_initial = self.actualinitialpayment.amount
         except ActualInitialPayment.DoesNotExist:
-            initial = None
+            payment_initial = payment(
+                self.interest_rate_initial / 12,
+                self.term,
+                self.amount,
+            )
 
         try:
-            thereafter = self.actualthereafterpayment.amount
+            payment_thereafter = self.actualthereafterpayment.amount
         except ActualThereafterPayment.DoesNotExist:
-            thereafter = None
+            payment_thereafter = payment(
+                self.interest_rate_thereafter / 12,
+                self.term,
+                self.amount,
+            )
 
-        return {
-            True: initial or payment(
-                self.interest_rates[True] / 12,
-                self.term,
-                self.amount,
+        return Periods(periods=[
+            Period(
+                interest_rate=self.interest_rate_initial,
+                payment=payment_initial,
+                start_month=0,
             ),
-            False: thereafter or payment(
-                self.interest_rates[False] / 12,
-                self.term,
-                self.amount,
+            Period(
+                interest_rate=self.interest_rate_thereafter,
+                payment=payment_thereafter,
+                start_month=self.initial_period,
             ),
-        }
+        ])
 
 
 class ActualPayment(models.Model):
@@ -250,3 +253,149 @@ class LedgerEntry:
             ),
             "closing_balance": self.closing_balance,
         }
+
+
+@attr.s
+class Period:
+    interest_rate = attr.ib()
+    payment = attr.ib()
+    start_month = attr.ib()
+
+
+@attr.s
+class Periods:
+    periods = attr.ib()
+
+    @property
+    def sorted_periods(self):
+        return sorted(
+            self.periods,
+            key=lambda period: period.start_month,
+            reverse=True,
+        )
+
+    def get_period(self, month):
+        for period in self.sorted_periods:
+            if period.start_month <= month:
+                return period
+
+
+@attr.s
+class Ledger:
+    mortgage = attr.ib()
+
+    ledger = None
+
+    _overpayments = None
+    _discrepancies = None
+    _periods = None
+
+    def __attrs_post_init__(self):
+        self.ledger = []
+
+    @property
+    def periods(self):
+        if self._periods is not None:
+            return self._periods
+
+        self._periods = self.mortgage.as_periods()
+
+        return self._periods
+
+    @property
+    def disposable_income(self):
+        return self.mortgage.income - self.mortgage.expenditure
+
+    @property
+    def balance(self):
+        if not self.ledger:
+            return -self.mortgage.amount
+
+        return self.ledger[-1].closing_balance
+
+    @property
+    def complete(self):
+        return self.balance == 0
+
+    @property
+    def next_year_month(self):
+        if not self.ledger:
+            return {
+                "year": self.mortgage.start_year,
+                "month": self.mortgage.start_month,
+            }
+
+        month = self.ledger[-1].month + 1
+        year = self.ledger[-1].year
+        if month == 13:  # Decemberer.
+            month = 1
+            year += 1
+
+        return {"year": year, "month": month}
+
+    @property
+    def overpayments(self):
+        if self._overpayments is not None:
+            return self._overpayments
+
+        self._overpayments = Overpayment.objects.for_mortgage(self.mortgage)
+        list(self._overpayments)
+
+        return self._overpayments
+
+    @property
+    def discrepancies(self):
+        if self._discrepancies is not None:
+            return self._discrepancies
+
+        self._discrepancies = Discrepancy.objects.for_mortgage(self.mortgage)
+        list(self._discrepancies)
+
+        return self._discrepancies
+
+    def calculate_entry(self):
+        month_number = len(self.ledger)
+        period = self.periods.get_period(month_number)
+
+        entry = LedgerEntry(
+            month_number=month_number,
+            mortgage_pk=self.mortgage.pk,
+            **self.next_year_month,
+            opening_balance=self.balance,
+            interest=round(self.balance * period.interest_rate / 12, 2),
+            payment=period.payment,
+            overpayment=max(0, self.disposable_income - period.payment),
+            discrepancy=Decimal("0"),
+        )
+
+        # If there are real values for this month's discrepancy or
+        # overpayment, use those instead.
+        try:
+            overpayment = self.overpayments.get(month=month_number)
+            entry.overpayment = overpayment.amount
+            entry.overpayment_pk = overpayment.pk
+        except Overpayment.DoesNotExist:
+            pass
+
+        try:
+            discrepancy = self.discrepancies.get(month=month_number)
+            entry.discrepancy = discrepancy.amount
+            entry.discrepancy_pk = discrepancy.pk
+        except Discrepancy.DoesNotExist:
+            pass
+
+        entry.normalise()
+
+        self.ledger.append(entry)
+
+    def calculate_entries(self):
+        while not self.complete:
+            self.calculate_entry()
+
+    def calculate_cost(self):
+        self.calculate_entries()
+
+        return sum(sum(
+            [[entry.interest, entry.discrepancy] for entry in self.ledger],
+            [],
+        ))

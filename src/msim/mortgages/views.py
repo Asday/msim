@@ -1,4 +1,3 @@
-from decimal import Decimal
 import json
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -7,7 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import DeleteView, DetailView, FormView, ListView
 
 from . import forms
-from .models import Discrepancy, LedgerEntry, Mortgage, Overpayment
+from .models import Discrepancy, Ledger, Mortgage, Overpayment
 
 
 class OwnerMixin:
@@ -26,75 +25,13 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        overpayments = Overpayment.objects.for_mortgage(self.object)
-        list(overpayments)
-        discrepancies = Discrepancy.objects.for_mortgage(self.object)
-        list(overpayments)
-
-        payment_amounts = self.object.get_payment_amounts()
-        current_year = self.object.start_year
-        current_month = self.object.start_month
-
-        ledger = []
-        balance = -self.object.amount
-        while balance:
-            month_number = len(ledger)
-            initial_period = month_number <= self.object.initial_period
-            payment_amount = payment_amounts[initial_period]
-            entry = LedgerEntry(
-                month_number=month_number,
-                mortgage_pk=self.object.pk,
-                year=current_year,
-                month=current_month,
-                opening_balance=balance,
-                interest=round(
-                    balance * self.object.interest_rates[initial_period] / 12,
-                    2,
-                ),
-                payment=payment_amount,
-                overpayment=max(
-                    0,
-                    sum([
-                        self.object.income,
-                        -self.object.expenditure,
-                        -payment_amount,
-                    ]),
-                ),
-                discrepancy=Decimal("0"),
-            )
-
-            # If there are real values for this month's discrepancy or
-            # overpayment, use those instead.
-            try:
-                overpayment = overpayments.get(month=month_number)
-                entry.overpayment = overpayment.amount
-                entry.overpayment_pk = overpayment.pk
-            except Overpayment.DoesNotExist:
-                pass
-
-            try:
-                discrepancy = discrepancies.get(month=month_number)
-                entry.discrepancy = discrepancy.amount
-                entry.discrepancy_pk = discrepancy.pk
-            except Discrepancy.DoesNotExist:
-                pass
-
-            entry.normalise()
-
-            balance = entry.closing_balance
-            current_month += 1
-            if current_month == 13:  # Decemberer.
-                current_month = 1
-                current_year += 1
-            ledger.append(entry)
+        ledger = Ledger(mortgage=self.object)
+        cost = ledger.calculate_cost()
 
         return {
             **context,
-            "ledger": ledger,
-            "total_cost": sum(sum(
-                [[entry.interest, entry.discrepancy] for entry in ledger],
-                [],
-            )),
+            "ledger": ledger.ledger,
+            "total_cost": cost,
         }
 
 
