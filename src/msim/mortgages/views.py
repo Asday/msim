@@ -1,3 +1,4 @@
+from copy import deepcopy
 from decimal import Decimal
 import json
 
@@ -78,32 +79,6 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
                 entry.discrepancy_pk = discrepancy.pk
             except Discrepancy.DoesNotExist:
                 pass
-
-            # If the user has provided temporary values for this
-            # month's discrepancy or overpayment, use THOSE instead.
-            #
-            # Normalise the entry before to account for the amount
-            # usually changing for the last payment, and after to deal
-            # with the user being silly.
-            #
-            # No user input sanitisation because I'm lazy and angry at
-            # estate agents.
-            entry.normalise()
-            if f"revert_{month_number}_overpayment" not in self.request.GET:
-                overpayment = self.request.GET.get(
-                    f"overpayment_amount_{month_number}",
-                )
-                if overpayment not in (None, str(entry.overpayment)):
-                    entry.overpayment = Decimal(overpayment)
-                    entry.overpayment_in_get = True
-
-            if f"revert_{month_number}_discrepancy" not in self.request.GET:
-                discrepancy = self.request.GET.get(
-                    f"discrepancy_amount_{month_number}",
-                )
-                if discrepancy not in (None, str(entry.discrepancy)):
-                    entry.discrepancy = Decimal(discrepancy)
-                    entry.discrepancy_in_get = True
 
             entry.normalise()
 

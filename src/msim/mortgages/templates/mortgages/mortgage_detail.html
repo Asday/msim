@@ -30,11 +30,9 @@
       <th>Discrepancy</th>
       <th>Closing balance</th>
     </thead>
-    <form>
-      {% for entry in ledger %}
-        {{ entry.as_tr }}
-      {% endfor %}
-    </form>
+    {% for entry in ledger %}
+      {{ entry.as_tr }}
+    {% endfor %}
   </table>
 {% endblock %}
 

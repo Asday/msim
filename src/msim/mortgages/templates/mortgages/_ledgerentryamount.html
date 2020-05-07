@@ -6,7 +6,6 @@
   value="{{ amount.amount }}"
 />
 
-<button type="submit">CALC</button>
 <button
   data-name="{{ amount.name }}"
   data-url="{% url amount.create_update pk=amount.ledger_entry.mortgage_pk %}"
@@ -20,14 +19,6 @@
   SAVE
 </button>
 
-{% if amount.in_get %}
-  <button
-    name="revert_{{ amount.month_number }}_{{ amount.type }}"
-    type="submit"
-  >
-    REVERT
-  </button>
-{% endif %}
 {% if amount.pk %}
   <button
     data-url="{% url amount.delete pk=amount.pk %}"

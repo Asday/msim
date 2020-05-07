@@ -152,7 +152,6 @@ class Discrepancy(Amount):
 class LedgerEntryAmount:
     ledger_entry = attr.ib()
     amount = attr.ib()
-    in_get = attr.ib()
     pk = attr.ib()
     type = attr.ib()
 
@@ -185,9 +184,7 @@ class LedgerEntry:
     overpayment = attr.ib()
     discrepancy = attr.ib()
 
-    overpayment_in_get = attr.ib(default=False)
     overpayment_pk = attr.ib(default=None)
-    discrepancy_in_get = attr.ib(default=False)
     discrepancy_pk = attr.ib(default=None)
 
     @property
@@ -230,14 +227,12 @@ class LedgerEntry:
             "overpayment": LedgerEntryAmount(
                 ledger_entry=self,
                 amount=self.overpayment,
-                in_get=self.overpayment_in_get,
                 pk=self.overpayment_pk,
                 type="overpayment",
             ),
             "discrepancy": LedgerEntryAmount(
                 ledger_entry=self,
                 amount=self.discrepancy,
-                in_get=self.discrepancy_in_get,
                 pk=self.discrepancy_pk,
                 type="discrepancy",
             ),
