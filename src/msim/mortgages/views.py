@@ -1,4 +1,3 @@
-from copy import deepcopy
 from decimal import Decimal
 import json
 
@@ -14,7 +13,7 @@ from .models import Discrepancy, LedgerEntry, Mortgage, Overpayment
 class OwnerMixin:
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+        return super().get_queryset().owned_by(self.request.user)
 
 
 class MortgageList(LoginRequiredMixin, OwnerMixin, ListView):

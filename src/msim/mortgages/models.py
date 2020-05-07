@@ -9,6 +9,16 @@ import attr
 from .utils import payment
 
 
+class MortgageQuerySet(models.QuerySet):
+
+    def owned_by(self, user):
+        return self.filter(owner=user)
+
+
+class MortgageManager(models.Manager.from_queryset(MortgageQuerySet)):
+    pass
+
+
 def between(lower, upper):
     """
     Inclusive of bounds.
@@ -37,6 +47,8 @@ class Mortgage(models.Model):
     )
     income = models.DecimalField(max_digits=9, decimal_places=2)
     expenditure = models.DecimalField(max_digits=9, decimal_places=2)
+
+    objects = MortgageManager()
 
     def __str__(self):
         return (
