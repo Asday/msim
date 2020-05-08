@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .views import (
+    ActualInitialPaymentSet,
+    ActualThereafterPaymentSet,
     DiscrepancyDelete,
     DiscrepancyCreateUpdate,
     MortgageCreate,
@@ -18,6 +20,16 @@ urlpatterns = [
     path("", MortgageList.as_view(), name="list"),
     path("create/", MortgageCreate.as_view(), name="create"),
     path("<int:pk>/", MortgageDetail.as_view(), name="detail"),
+    path(
+        "<int:pk>/set_initial/",
+        ActualInitialPaymentSet.as_view(),
+        name="actualinitialpayment.set",
+    ),
+    path(
+        "<int:pk>/set_thereafter/",
+        ActualThereafterPaymentSet.as_view(),
+        name="actualthereafterpayment.set",
+    ),
     path("<int:pk>/duplicate/", MortgageDuplicate.as_view(), name="duplicate"),
     path("<int:pk>/delete/", MortgageDelete.as_view(), name="delete"),
     path(

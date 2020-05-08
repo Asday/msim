@@ -61,24 +61,32 @@ class Mortgage(models.Model):
     def get_absolute_url(self):
         return reverse("mortgages:detail", kwargs={"pk": self.pk})
 
+    @property
+    def default_payment_initial(self):
+        return payment(
+            self.interest_rate_initial / 12,
+            self.term,
+            self.amount,
+        )
+
+    @property
+    def default_payment_thereafter(self):
+        return payment(
+            self.interest_rate_thereafter / 12,
+            self.term,
+            self.amount,
+        )
+
     def as_periods(self):
         try:
             payment_initial = self.actualinitialpayment.amount
         except ActualInitialPayment.DoesNotExist:
-            payment_initial = payment(
-                self.interest_rate_initial / 12,
-                self.term,
-                self.amount,
-            )
+            payment_initial = self.default_payment_initial
 
         try:
             payment_thereafter = self.actualthereafterpayment.amount
         except ActualThereafterPayment.DoesNotExist:
-            payment_thereafter = payment(
-                self.interest_rate_thereafter / 12,
-                self.term,
-                self.amount,
-            )
+            payment_thereafter = self.default_payment_thereafter
 
         return Periods(periods=[
             Period(
@@ -125,6 +133,18 @@ class Mortgage(models.Model):
         return self
 
 
+class ActualPaymentQuerySet(models.QuerySet):
+
+    def for_mortgage(self, mortgage):
+        return self.filter(mortgage=mortgage)
+
+
+class ActualPaymentManager(
+    models.Manager.from_queryset(ActualPaymentQuerySet),
+):
+    pass
+
+
 class ActualPayment(models.Model):
     mortgage = models.OneToOneField(
         "mortgages.Mortgage",
@@ -132,6 +152,8 @@ class ActualPayment(models.Model):
         related_name="%(class)s",
     )
     amount = models.DecimalField(max_digits=9, decimal_places=2)
+
+    objects = ActualPaymentManager()
 
     class Meta:
         abstract = True
@@ -147,13 +169,23 @@ class ActualPayment(models.Model):
 
         self.save()
 
+    @staticmethod
+    def get_default(mortgage):
+        raise NotImplementedError()
+
 
 class ActualInitialPayment(ActualPayment):
-    pass
+
+    @staticmethod
+    def get_default(mortgage):
+        return mortgage.default_payment_initial
 
 
 class ActualThereafterPayment(ActualPayment):
-    pass
+
+    @staticmethod
+    def get_default(mortgage):
+        return mortgage.default_payment_thereafter
 
 
 class AmountQuerySet(models.QuerySet):

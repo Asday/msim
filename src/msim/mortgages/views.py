@@ -2,6 +2,7 @@ from copy import deepcopy
 import json
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -14,7 +15,14 @@ from django.views.generic import (
 from django.views.generic.detail import SingleObjectMixin
 
 from . import forms
-from .models import Discrepancy, Ledger, Mortgage, Overpayment
+from .models import (
+    ActualInitialPayment,
+    ActualThereafterPayment,
+    Discrepancy,
+    Ledger,
+    Mortgage,
+    Overpayment,
+)
 
 
 class MortgageCreate(LoginRequiredMixin, CreateView):
@@ -71,6 +79,46 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
             "total_cost": cost,
             "what_could_have_been": without_overriden_overpayments,
         }
+
+
+class ActualPaymentSet(
+    LoginRequiredMixin,
+    OwnerMixin,
+    SingleObjectMixin,
+    FormView,
+):
+    model = Mortgage
+    form_class = forms.ActualPaymentSet
+    template_name = "mortgages/actualpayment_set.html"
+    actual_payment_model = None
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+
+        self.object = self.get_object()
+
+    def get_form_kwargs(self):
+        if self.actual_payment_model is None:
+            raise ImproperlyConfigured("no")
+
+        return {
+            **super().get_form_kwargs(),
+            "model": self.actual_payment_model,
+            "mortgage": self.object,
+        }
+
+    def form_valid(self, form):
+        form.save()
+
+        return HttpResponseRedirect(self.object.get_absolute_url())
+
+
+class ActualInitialPaymentSet(ActualPaymentSet):
+    actual_payment_model = ActualInitialPayment
+
+
+class ActualThereafterPaymentSet(ActualPaymentSet):
+    actual_payment_model = ActualThereafterPayment
 
 
 class MortgageDuplicate(

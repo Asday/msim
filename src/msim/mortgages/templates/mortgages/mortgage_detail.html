@@ -8,6 +8,17 @@
 
   <p><a href="{% url 'mortgages:list' %}">&lt; Mortgages</a></p>
 
+  <p>
+    Set actual payment for
+    <a href="{% url 'mortgages:actualinitialpayment.set' pk=mortgage.pk %}">
+      intial period
+    </a>
+    /
+    <a href="{% url 'mortgages:actualthereafterpayment.set' pk=mortgage.pk %}">
+      thereafter
+    </a>
+  </p>
+
   <table>
     <thead>
       <th>End date</th>
