@@ -10,6 +10,11 @@
 
   <ul>
     <li>
+      <a href="{% url 'mortgages:update' pk=mortgage.pk %}">
+        Edit this mortgage
+      </a>
+    </li>
+    <li>
       Set actual payment for
       <a href="{% url 'mortgages:actualinitialpayment.set' pk=mortgage.pk %}">
         intial period

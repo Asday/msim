@@ -11,6 +11,7 @@ from django.views.generic import (
     DetailView,
     FormView,
     ListView,
+    UpdateView,
 )
 from django.views.generic.detail import SingleObjectMixin
 
@@ -25,7 +26,7 @@ from .models import (
 )
 
 
-class MortgageCreate(LoginRequiredMixin, CreateView):
+class MortgageCreateUpdateMixin:
     model = Mortgage
     fields = [
         "start_year",
@@ -39,6 +40,13 @@ class MortgageCreate(LoginRequiredMixin, CreateView):
         "expenditure",
     ]
 
+
+class MortgageCreate(
+    LoginRequiredMixin,
+    MortgageCreateUpdateMixin,
+    CreateView,
+):
+
     def form_valid(self, form):
         form.instance.owner = self.request.user
 
@@ -49,6 +57,15 @@ class OwnerMixin:
 
     def get_queryset(self):
         return super().get_queryset().owned_by(self.request.user)
+
+
+class MortgageUpdate(
+    LoginRequiredMixin,
+    MortgageCreateUpdateMixin,
+    OwnerMixin,
+    UpdateView,
+):
+    pass
 
 
 class MortgageList(LoginRequiredMixin, OwnerMixin, ListView):

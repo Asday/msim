@@ -10,6 +10,7 @@ from .views import (
     MortgageDetail,
     MortgageDuplicate,
     MortgageList,
+    MortgageUpdate,
     OverpaymentDelete,
     OverpaymentCreateUpdate,
 )
@@ -19,6 +20,7 @@ app_name = "mortgages"
 urlpatterns = [
     path("", MortgageList.as_view(), name="list"),
     path("create/", MortgageCreate.as_view(), name="create"),
+    path("<int:pk>/update/", MortgageUpdate.as_view(), name="update"),
     path("<int:pk>/", MortgageDetail.as_view(), name="detail"),
     path(
         "<int:pk>/set_initial/",
