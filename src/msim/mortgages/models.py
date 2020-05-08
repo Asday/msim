@@ -170,7 +170,7 @@ class AmountManager(models.Manager.from_queryset(AmountQuerySet)):
 
 
 class Amount(models.Model):
-    mortgage = models.OneToOneField(
+    mortgage = models.ForeignKey(
         "mortgages.Mortgage",
         on_delete=models.CASCADE,
         related_name="%(class)ss",
