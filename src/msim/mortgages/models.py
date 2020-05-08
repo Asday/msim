@@ -93,6 +93,37 @@ class Mortgage(models.Model):
             ),
         ])
 
+    def duplicate(self):
+        try:
+            initial = self.actualinitialpayment
+        except ActualInitialPayment.DoesNotExist:
+            initial = None
+
+        try:
+            thereafter = self.actualthereafterpayment
+        except ActualThereafterPayment.DoesNotExist:
+            thereafter = None
+
+        overpayments = Overpayment.objects.for_mortgage(self)
+        discrepancies = Discrepancy.objects.for_mortgage(self)
+
+        self.pk = None
+        self.save()
+
+        if initial is not None:
+            initial.duplicate_for(self)
+
+        if thereafter is not None:
+            thereafter.duplicate_for(self)
+
+        for overpayment in overpayments:
+            overpayment.duplicate_for(self)
+
+        for discrepancy in discrepancies:
+            discrepancy.duplicate_for(self)
+
+        return self
+
 
 class ActualPayment(models.Model):
     mortgage = models.OneToOneField(
@@ -109,6 +140,12 @@ class ActualPayment(models.Model):
         class_name = self.__class__._meta.verbose_name.capitalize()
 
         return f"{class_name} of {self.amount}"
+
+    def duplicate_for(self, mortgage):
+        self.pk = None
+        self.mortgage = mortgage
+
+        self.save()
 
 
 class ActualInitialPayment(ActualPayment):
@@ -153,6 +190,12 @@ class Amount(models.Model):
         class_name = self.__class__._meta.verbose_name.capitalize()
 
         return f"{class_name} of {self.amount}"
+
+    def duplicate_for(self, mortgage):
+        self.pk = None
+        self.mortgage = mortgage
+
+        self.save()
 
 
 class Overpayment(Amount):

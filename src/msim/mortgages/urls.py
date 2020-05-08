@@ -6,6 +6,7 @@ from .views import (
     MortgageCreate,
     MortgageDelete,
     MortgageDetail,
+    MortgageDuplicate,
     MortgageList,
     OverpaymentDelete,
     OverpaymentCreateUpdate,
@@ -17,6 +18,7 @@ urlpatterns = [
     path("", MortgageList.as_view(), name="list"),
     path("create/", MortgageCreate.as_view(), name="create"),
     path("<int:pk>/", MortgageDetail.as_view(), name="detail"),
+    path("<int:pk>/duplicate/", MortgageDuplicate.as_view(), name="duplicate"),
     path("<int:pk>/delete/", MortgageDelete.as_view(), name="delete"),
     path(
         "<int:pk>/overpayments/",

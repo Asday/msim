@@ -1,7 +1,7 @@
 import json
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -10,6 +10,7 @@ from django.views.generic import (
     FormView,
     ListView,
 )
+from django.views.generic.detail import SingleObjectMixin
 
 from . import forms
 from .models import Discrepancy, Ledger, Mortgage, Overpayment
@@ -59,6 +60,33 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
             "ledger": ledger.ledger,
             "total_cost": cost,
         }
+
+
+class MortgageDuplicate(
+    LoginRequiredMixin,
+    OwnerMixin,
+    SingleObjectMixin,
+    FormView,
+):
+    model = Mortgage
+    form_class = forms.MortgageDuplicate
+    template_name = "mortgages/mortgage_duplicate.html"
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+
+        self.object = self.get_object()
+
+    def get_form_kwargs(self):
+        return {
+            **super().get_form_kwargs(),
+            "mortgage": self.object,
+        }
+
+    def form_valid(self, form):
+        mortgage = form.save()
+
+        return HttpResponseRedirect(mortgage.get_absolute_url())
 
 
 class MortgageDelete(LoginRequiredMixin, OwnerMixin, DeleteView):

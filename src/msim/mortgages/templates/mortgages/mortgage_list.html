@@ -6,11 +6,18 @@
   <p>
     <a href="{% url 'mortgages:create' %}">Create new</a>
   {% for mortgage in mortgage_list %}
-    <p>
-      <a href="{{ mortgage.get_absolute_url }}">{{ mortgage }}</a>
-      -
-      <a href="{% url 'mortgages:delete' pk=mortgage.pk %}">Delete</a>
-    </p>
+    <form
+      action="{% url 'mortgages:duplicate' pk=mortgage.pk %}"
+      method="POST"
+    >
+      <p>
+        <a href="{{ mortgage.get_absolute_url }}">{{ mortgage }}</a>
+        -
+        <a href="{% url 'mortgages:delete' pk=mortgage.pk %}">Delete</a>
+          {% csrf_token %}
+          <button type="submit">Duplicate</button>
+      </p>
+    </form>
   {% empty %}
     <p>nothin'</p>
   {% endfor %}

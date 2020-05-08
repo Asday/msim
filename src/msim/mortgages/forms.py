@@ -19,3 +19,14 @@ class AmountCreateUpdate(forms.Form):
             month=self.cleaned_data["month"],
             defaults={"amount": self.cleaned_data["amount"]},
         )
+
+
+class MortgageDuplicate(forms.Form):
+
+    def __init__(self, *args, mortgage, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.mortgage = mortgage
+
+    def save(self):
+        return self.mortgage.duplicate()

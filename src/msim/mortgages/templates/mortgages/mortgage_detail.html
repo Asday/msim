@@ -40,6 +40,10 @@
   <a href="{% url 'mortgages:delete' pk=mortgage.pk %}">
     Delete this mortgage
   </a>
+  <form action="{% url 'mortgages:duplicate' pk=mortgage.pk %}" method="POST">
+    {% csrf_token %}
+    <button type="submit">Duplicate this mortgage</button>
+  </form>
 {% endblock %}
 
 {% block js %}
