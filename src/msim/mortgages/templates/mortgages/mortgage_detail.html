@@ -8,16 +8,34 @@
 
   <p><a href="{% url 'mortgages:list' %}">&lt; Mortgages</a></p>
 
-  <p>
-    Set actual payment for
-    <a href="{% url 'mortgages:actualinitialpayment.set' pk=mortgage.pk %}">
-      intial period
-    </a>
-    /
-    <a href="{% url 'mortgages:actualthereafterpayment.set' pk=mortgage.pk %}">
-      thereafter
-    </a>
-  </p>
+  <ul>
+    <li>
+      Set actual payment for
+      <a href="{% url 'mortgages:actualinitialpayment.set' pk=mortgage.pk %}">
+        intial period
+      </a>
+      /
+      <a
+        href="{% url 'mortgages:actualthereafterpayment.set' pk=mortgage.pk %}"
+      >
+        thereafter
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'mortgages:delete' pk=mortgage.pk %}">
+        Delete this mortgage
+      </a>
+    </li>
+    <li>
+      <form
+        action="{% url 'mortgages:duplicate' pk=mortgage.pk %}"
+        method="POST"
+      >
+        {% csrf_token %}
+        <button type="submit">Duplicate this mortgage</button>
+      </form>
+    </li>
+  </ul>
 
   <table>
     <thead>
@@ -57,14 +75,6 @@
       </tr>
     {% endfor %}
   </table>
-
-  <a href="{% url 'mortgages:delete' pk=mortgage.pk %}">
-    Delete this mortgage
-  </a>
-  <form action="{% url 'mortgages:duplicate' pk=mortgage.pk %}" method="POST">
-    {% csrf_token %}
-    <button type="submit">Duplicate this mortgage</button>
-  </form>
 {% endblock %}
 
 {% block js %}
