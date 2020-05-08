@@ -1,0 +1,13 @@
+{% load abs %}
+{% load add %}
+
+Overpaying {{ entry.overpayment_delta|abs }}
+{% with entry.overpayment_delta_positive as less %}
+  {% if less %}
+    less than usual costs
+  {% else %}
+    more than usual saves
+  {% endif %}
+{% endwith %}
+you {{ extra_cost|abs }}
+(making that delta worth {{ entry.overpayment_delta|add:extra_cost|abs }})

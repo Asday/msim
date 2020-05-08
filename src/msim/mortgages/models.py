@@ -164,6 +164,12 @@ class AmountQuerySet(models.QuerySet):
     def owned_by(self, user):
         return self.filter(mortgage__owner=user)
 
+    def as_monthly_dict(self):
+        return {
+            amount.month: amount
+            for amount in self
+        }
+
 
 class AmountManager(models.Manager.from_queryset(AmountQuerySet)):
     pass
@@ -245,6 +251,19 @@ class LedgerEntry:
     overpayment_pk = attr.ib(default=None)
     discrepancy_pk = attr.ib(default=None)
 
+    default_overpayment = None
+
+    def __attrs_post_init__(self):
+        self.default_overpayment = self.overpayment
+
+    @property
+    def overpayment_delta(self):
+        return self.default_overpayment - self.overpayment
+
+    @property
+    def overpayment_delta_positive(self):
+        return self.overpayment_delta > 0
+
     @property
     def closing_balance(self):
         return sum([
@@ -268,9 +287,9 @@ class LedgerEntry:
             ]))
 
     @property
-    def as_tr(self):
+    def as_tds(self):
         return render_to_string(
-            "mortgages/_ledgerentry_tr.html",
+            "mortgages/_ledgerentry_tds.html",
             self.as_context,
         )
 
@@ -381,8 +400,11 @@ class Ledger:
         if self._overpayments is not None:
             return self._overpayments
 
-        self._overpayments = Overpayment.objects.for_mortgage(self.mortgage)
-        list(self._overpayments)
+        self._overpayments = (
+            Overpayment.objects
+            .for_mortgage(self.mortgage)
+            .as_monthly_dict()
+        )
 
         return self._overpayments
 
@@ -391,10 +413,39 @@ class Ledger:
         if self._discrepancies is not None:
             return self._discrepancies
 
-        self._discrepancies = Discrepancy.objects.for_mortgage(self.mortgage)
-        list(self._discrepancies)
+        self._discrepancies = (
+            Discrepancy.objects
+            .for_mortgage(self.mortgage)
+            .as_monthly_dict()
+        )
 
         return self._discrepancies
+
+    def _set_amount(self, overpayments, month, to):
+        target = self._overpayments if overpayments else self._discrepancies
+
+        current = target.get(month)
+        if current == to:
+            return
+
+        if to is None:  # Delete.
+            target.pop(month)
+        else:
+            target[month] = to
+
+        self.ledger = self.ledger[:month]
+
+    def set_overpayment(self, month, to):
+        return self._set_amount(overpayments=True, month=month, to=to)
+
+    def delete_overpayment(self, month):
+        return self._set_amount(overpayments=True, month=month, to=None)
+
+    def set_discrepancy(self, month, to):
+        return self._set_amount(overpayments=False, month=month, to=to)
+
+    def delete_discrepancy(self, month):
+        return self._set_amount(overpayments=False, month=month, to=None)
 
     def calculate_entry(self):
         month_number = len(self.ledger)
@@ -413,19 +464,15 @@ class Ledger:
 
         # If there are real values for this month's discrepancy or
         # overpayment, use those instead.
-        try:
-            overpayment = self.overpayments.get(month=month_number)
+        overpayment = self.overpayments.get(month_number)
+        if overpayment is not None:
             entry.overpayment = overpayment.amount
             entry.overpayment_pk = overpayment.pk
-        except Overpayment.DoesNotExist:
-            pass
 
-        try:
-            discrepancy = self.discrepancies.get(month=month_number)
+        discrepancy = self.discrepancies.get(month_number)
+        if discrepancy is not None:
             entry.discrepancy = discrepancy.amount
             entry.discrepancy_pk = discrepancy.pk
-        except Discrepancy.DoesNotExist:
-            pass
 
         entry.normalise()
 

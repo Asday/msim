@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -55,10 +56,20 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
         ledger = Ledger(mortgage=self.object)
         cost = ledger.calculate_cost()
 
+        without_overriden_overpayments = {}
+        for month in ledger.overpayments:
+            new_ledger = deepcopy(ledger)
+            new_ledger.delete_overpayment(month)
+            new_cost = new_ledger.calculate_cost()
+
+            # Positive for greater total cost.
+            without_overriden_overpayments[month] = new_cost - cost
+
         return {
             **context,
             "ledger": ledger.ledger,
             "total_cost": cost,
+            "what_could_have_been": without_overriden_overpayments,
         }
 
 

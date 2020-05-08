@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+{% load get %}
 {% load humanize %}
 
 {% block content %}
@@ -33,7 +34,16 @@
       <th>Closing balance</th>
     </thead>
     {% for entry in ledger %}
-      {{ entry.as_tr }}
+      <tr>
+        {{ entry.as_tds }}
+        <td>
+          {% with what_could_have_been|get:forloop.counter0 as extra_cost %}
+            {% if extra_cost is not None %}
+              {% include "mortgages/_extra_cost.html" %}
+            {% endif %}
+          {% endwith %}
+        </td>
+      </tr>
     {% endfor %}
   </table>
 
