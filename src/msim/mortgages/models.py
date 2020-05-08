@@ -40,15 +40,24 @@ class Mortgage(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(0)],
     )
-    term = models.PositiveSmallIntegerField()
-    initial_period = models.PositiveSmallIntegerField()
-    interest_rate_initial = models.DecimalField(max_digits=5, decimal_places=5)
+    term = models.PositiveSmallIntegerField(help_text="months")
+    initial_period = models.PositiveSmallIntegerField(help_text="months")
+    interest_rate_initial = models.DecimalField(
+        max_digits=5,
+        decimal_places=5,
+        help_text="(1% = 0.01)",
+    )
     interest_rate_thereafter = models.DecimalField(
         max_digits=5,
         decimal_places=5,
+        help_text="(1% = 0.01)",
     )
     income = models.DecimalField(max_digits=9, decimal_places=2)
-    expenditure = models.DecimalField(max_digits=9, decimal_places=2)
+    expenditure = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        help_text="(not including your mortgage payments)",
+    )
 
     objects = MortgageManager()
 
