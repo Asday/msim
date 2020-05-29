@@ -5,6 +5,10 @@ pip install -r requirements-dev.txt
 ./watch
 ```
 
+```shell
+docker-compose up
+```
+
 # Running tests
 
 `tox --parallel all`.
@@ -12,5 +16,9 @@ pip install -r requirements-dev.txt
 # Running the project
 
 ```shell
-./manage runserver 54748
+docker-compose up
+```
+
+```shell
+./manage migrate
 ```
