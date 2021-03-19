@@ -36,6 +36,6 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
     ],
     install_requires=[
-        'django==3.0.7',
+        'django==3.1.6',
     ],
 )
