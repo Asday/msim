@@ -533,3 +533,12 @@ class Ledger:
             [[entry.interest, entry.discrepancy] for entry in self.ledger],
             [],
         ))
+
+    @property
+    def month_choices(self):
+        self.calculate_entries()
+
+        return tuple((
+            (entry.month_number, entry.month_name)
+            for entry in self.ledger
+        ))

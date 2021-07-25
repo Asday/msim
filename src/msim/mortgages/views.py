@@ -83,18 +83,25 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
 
         without_overriden_overpayments = {}
         for month in ledger.overpayments:
-            new_ledger = deepcopy(ledger)
-            new_ledger.delete_overpayment(month)
-            new_cost = new_ledger.calculate_cost()
+            without_overridden_overpayment = deepcopy(ledger)
+            without_overridden_overpayment.delete_overpayment(month)
+            cost_without_overpayment = (
+                without_overridden_overpayment.calculate_cost()
+            )
 
             # Positive for greater total cost.
-            without_overriden_overpayments[month] = new_cost - cost
+            without_overriden_overpayments[month] = (
+                cost_without_overpayment - cost
+            )
 
         return {
             **context,
             "ledger": ledger.ledger,
             "total_cost": cost,
             "what_could_have_been": without_overriden_overpayments,
+            "speculate_form": forms.SpeculateForm(
+                month_choices=ledger.month_choices,
+            )
         }
 
 
@@ -223,3 +230,54 @@ class OverpaymentDelete(LoginRequiredMixin, AmountOwnerMixin, DeleteView):
 class OverpaymentCreateUpdate(BaseAmountCreateUpdate):
     model = Overpayment
     success_url = reverse_lazy("mortgages:list")
+
+
+class Speculate(LoginRequiredMixin, OwnerMixin, DetailView):
+    model = Mortgage
+    template_name_suffix = "_speculate"
+
+    def get_context_data(self, **kwargs):
+        ledger = Ledger(self.object)
+        month_choices = ledger.month_choices
+        form = forms.SpeculateForm(
+            self.request.GET,
+            month_choices=month_choices,
+        )
+        valid = form.is_valid()
+
+        delta = None
+        data = None
+        no_money = False
+        if valid:
+            base_cost = ledger.calculate_cost()
+
+            data = form.cleaned_data
+            remaining = data['amount']
+            month = data['month']
+            while remaining > 0:
+                overpayment = ledger.ledger[month].overpayment
+                ledger.set_overpayment(
+                    month,
+                    Overpayment(amount=max(overpayment - remaining, 0)),
+                )
+                remaining -= overpayment
+                month -= 1
+
+                if month < 0:
+                    no_money = True
+
+                    break
+
+            new_cost = ledger.calculate_cost()
+
+            delta = base_cost - new_cost + data['amount']
+
+        return {
+            **super().get_context_data(**kwargs),
+            "valid": valid,
+            "form": form,
+            "delta": delta,
+            "data": data,
+            "no_money": no_money,
+            "month_names": dict(month_choices),
+        }

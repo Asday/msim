@@ -52,3 +52,13 @@ class MortgageDuplicate(forms.Form):
 
     def save(self):
         return self.mortgage.duplicate()
+
+
+class SpeculateForm(forms.Form):
+    amount = forms.DecimalField()
+    month = forms.TypedChoiceField(coerce=int)
+
+    def __init__(self, *args, month_choices, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["month"].choices = month_choices

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% load get %}
+{% load humanize %}
+
+{% block content %}
+  <h1>Speculated spending</h1>
+
+  <p>
+    <a href="{% url 'mortgages:list' %}">&lt; Mortgages</a>
+    /
+    <a href="{% url 'mortgages:detail' pk=mortgage.pk %}">{{ mortgage }}</a>
+  </p>
+
+  <form action="" method="GET" id="speculateForm">
+    {{ form.as_p }}
+    <a href="#" onclick="speculateForm.submit()">Speculate again!</a>
+  </form>
+
+  <p>
+    {% if valid %}
+      {% if no_money %}
+        You do not have enough time to save up
+        {{ data.amount|intcomma }} by month {{ data.month }} by cutting
+        overpayments.
+      {% else %}
+        Cutting overpayments to spend {{ data.amount|intcomma }} in
+        {{ month_names|get:data.month }} will cost you
+        {{ delta|intcomma }} over the period of the mortgage.  Are you
+        sure you wanna do that?
+      {% endif %}
+    {% else %}
+      {# Super user unfriendly - whatever. #}
+      Malformed speculation data, go back and try again.
+
+      {{ form.errors }}
+    {% endif %}
+{% endblock %}

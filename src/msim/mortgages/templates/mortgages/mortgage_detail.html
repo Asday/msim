@@ -42,6 +42,8 @@
     </li>
   </ul>
 
+  <h2>Summary</h2>
+
   <table>
     <thead>
       <th>End date</th>
@@ -56,6 +58,27 @@
       <td>{{ total_cost|intcomma }}</td>
     </tr>
   </table>
+
+  <hr />
+
+  <h2>Speculation</h2>
+
+  <form
+    action="{% url 'mortgages:speculate' pk=mortgage.pk %}"
+    method="GET"
+    id="speculateForm"
+  >
+    <span>
+      How much will spending a certain amount on a certain month cost
+      in the long run?
+    </span>
+    {{ speculate_form.as_p }}
+    <a href="#" onclick="speculateForm.submit()">Speculate</a>
+  </form>
+
+  <hr />
+
+  <h2>Details</h2>
 
   <table>
     <thead>

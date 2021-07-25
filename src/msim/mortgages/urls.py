@@ -13,6 +13,7 @@ from .views import (
     MortgageUpdate,
     OverpaymentDelete,
     OverpaymentCreateUpdate,
+    Speculate,
 )
 
 
@@ -54,4 +55,5 @@ urlpatterns = [
         DiscrepancyDelete.as_view(),
         name="discrepancy.delete",
     ),
+    path("<int:pk>/speculate/", Speculate.as_view(), name="speculate")
 ]
