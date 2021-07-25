@@ -38,6 +38,8 @@ class MortgageCreateUpdateMixin:
         "interest_rate_thereafter",
         "income",
         "expenditure",
+        "default_overpayment_initial",
+        "default_overpayment_thereafter",
     ]
 
 

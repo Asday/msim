@@ -58,6 +58,20 @@ class Mortgage(models.Model):
         decimal_places=2,
         help_text="(not including your mortgage payments)",
     )
+    default_overpayment_initial = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        blank=True,
+        help_text="calculated automatically if left blank",
+    )
+    default_overpayment_thereafter = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        blank=True,
+        help_text="calculated automatically if left blank",
+    )
 
     objects = MortgageManager()
 
@@ -69,6 +83,11 @@ class Mortgage(models.Model):
 
     def get_absolute_url(self):
         return reverse("mortgages:detail", kwargs={"pk": self.pk})
+
+    def save(self, *args, **kwargs):
+        self.ensure_defaults()
+
+        return super().save(*args, **kwargs)
 
     @property
     def default_payment_initial(self):
@@ -86,6 +105,23 @@ class Mortgage(models.Model):
             self.amount,
         )
 
+    @property
+    def disposable_income(self):
+        return self.income - self.expenditure
+
+    def ensure_defaults(self):
+        if self.default_overpayment_initial is None:
+            self.default_overpayment_initial = max(
+                self.disposable_income - self.default_payment_initial,
+                0,
+            )
+
+        if self.default_overpayment_thereafter is None:
+            self.default_overpayment_thereafter = max(
+                self.disposable_income - self.default_payment_thereafter,
+                0,
+            )
+
     def as_periods(self):
         try:
             payment_initial = self.actualinitialpayment.amount
@@ -101,11 +137,13 @@ class Mortgage(models.Model):
             Period(
                 interest_rate=self.interest_rate_initial,
                 payment=payment_initial,
+                default_overpayment=self.default_overpayment_initial,
                 start_month=0,
             ),
             Period(
                 interest_rate=self.interest_rate_thereafter,
                 payment=payment_thereafter,
+                default_overpayment=self.default_overpayment_thereafter,
                 start_month=self.initial_period,
             ),
         ])
@@ -368,6 +406,7 @@ class LedgerEntry:
 class Period:
     interest_rate = attr.ib()
     payment = attr.ib()
+    default_overpayment = attr.ib()
     start_month = attr.ib()
 
 
@@ -410,10 +449,6 @@ class Ledger:
         self._periods = self.mortgage.as_periods()
 
         return self._periods
-
-    @property
-    def disposable_income(self):
-        return self.mortgage.income - self.mortgage.expenditure
 
     @property
     def balance(self):
@@ -505,7 +540,7 @@ class Ledger:
             opening_balance=self.balance,
             interest=round(self.balance * period.interest_rate / 12, 2),
             payment=period.payment,
-            overpayment=max(0, self.disposable_income - period.payment),
+            overpayment=period.default_overpayment,
             discrepancy=Decimal("0"),
         )
 
