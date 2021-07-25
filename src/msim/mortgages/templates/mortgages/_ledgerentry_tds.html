@@ -1,6 +1,6 @@
 {% load humanize %}
 
-<td>{{ year }}-{{ month|stringformat:"02d" }}</td>
+<td>{{ month_name }}</td>
 <td>{{ opening_balance|intcomma }}</td>
 <td>{{ interest|intcomma }}</td>
 <td>{{ payment|intcomma }}</td>

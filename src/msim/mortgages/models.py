@@ -328,6 +328,10 @@ class LedgerEntry:
             ]))
 
     @property
+    def month_name(self):
+        return f"{self.year}-{self.month:02d}"
+
+    @property
     def as_tds(self):
         return render_to_string(
             "mortgages/_ledgerentry_tds.html",
@@ -337,8 +341,7 @@ class LedgerEntry:
     @property
     def as_context(self):
         return {
-            "year": self.year,
-            "month": self.month,
+            "month_name": self.month_name,
             "opening_balance": self.opening_balance,
             "interest": self.interest,
             "payment": self.payment,
