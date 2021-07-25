@@ -211,6 +211,9 @@ class AmountQuerySet(models.QuerySet):
             for amount in self
         }
 
+    def average(self):
+        return self.aggregate(a=models.Avg("amount"))["a"]
+
 
 class AmountManager(models.Manager.from_queryset(AmountQuerySet)):
     pass

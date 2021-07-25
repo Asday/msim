@@ -48,6 +48,7 @@
     <thead>
       <th>End date</th>
       <th>Total cost</th>
+      <th>Average overpayment so far</th>
     </thead>
     <tr>
       <td>
@@ -56,6 +57,7 @@
         {% endwith %}
       </td>
       <td>{{ total_cost|intcomma }}</td>
+      <td>{{ average_overpayment|floatformat:2 }}</td>
     </tr>
   </table>
 
