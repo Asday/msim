@@ -4,9 +4,9 @@
 Overpaying {{ entry.overpayment_delta|abs }}
 {% with entry.overpayment_delta_positive as less %}
   {% if less %}
-    less than usual costs
+    less than usual <span class="costs">costs</span>
   {% else %}
-    more than usual saves
+    more than usual <span class="saves">saves</span>
   {% endif %}
 {% endwith %}
 you {{ extra_cost|abs }}
