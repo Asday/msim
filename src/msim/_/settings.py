@@ -113,3 +113,5 @@ STATIC_URL = "/static/"
 
 LOGIN_REDIRECT_URL = reverse_lazy("mortgages:list")
 LOGOUT_REDIRECT_URL = "/"
+
+ADMINS = json.loads(os.getenv("DJANGO_ADMINS", "[]"))
