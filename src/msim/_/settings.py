@@ -18,7 +18,11 @@ DEBUG = json.loads(os.getenv("DJANGO_DEBUG", "false"))
 if not DEBUG and SECRET_KEY == placeholder_secret_key:
     raise ValueError("you must set `DJANGO_SECRET_KEY` outside of local dev")
 
-ALLOWED_HOSTS = json.loads(os.getenv("DJANGO_ALLOWED_HOSTS", "[]"))
+default_allowed_hosts = "[\"*\"]" if DEBUG else "[]"
+ALLOWED_HOSTS = json.loads(os.getenv(
+    "DJANGO_ALLOWED_HOSTS",
+    default_allowed_hosts,
+))
 
 
 # Application definition
