@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   db:
-    image: postgres:12.2-alpine
+    image: postgres:14.2-alpine
     environment:
       POSTGRES_PASSWORD: msim
       POSTGRES_USER: msim
