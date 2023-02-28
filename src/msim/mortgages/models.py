@@ -3,8 +3,11 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import F
+from django.db.models.expressions import RawSQL
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 
 import attr
 
@@ -250,6 +253,24 @@ class AmountQuerySet(models.QuerySet):
 
     def average(self):
         return self.aggregate(a=models.Avg("amount"))["a"]
+
+    def with_current_month(self):
+        return (
+            self
+            .annotate(start_date=F("mortgage__start_date"))
+            .annotate(current_month=RawSQL(
+                "SELECT start_date + make_interval(0, month)"
+                " AS current_month",
+                (),
+            ))
+        )
+
+    def in_the_past(self):
+        return (
+            self
+            .with_current_month()
+            .filter(current_month__lte=timezone.now())
+        )
 
 
 class AmountManager(models.Manager.from_queryset(AmountQuerySet)):
