@@ -99,7 +99,11 @@ class MortgageDetail(LoginRequiredMixin, OwnerMixin, DetailView):
             **context,
             "ledger": ledger.ledger,
             "total_cost": cost,
-            "average_overpayment": self.object.overpayments.average(),
+            "average_overpayment": (
+                self.object.overpayments
+                .in_the_past()
+                .average()
+            ),
             "what_could_have_been": without_overriden_overpayments,
             "speculate_form": forms.SpeculateForm(
                 month_choices=ledger.month_choices,
