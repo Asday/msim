@@ -33,8 +33,7 @@ class Mortgage(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
     )
-    start_year = models.PositiveIntegerField()
-    start_month = models.PositiveSmallIntegerField(validators=between(1, 12))
+    start_date = models.DateField()
     amount = models.DecimalField(
         max_digits=9,
         decimal_places=2,
@@ -77,8 +76,8 @@ class Mortgage(models.Model):
 
     def __str__(self):
         return (
-            f"Mortgage of {self.amount} commencing {self.start_year}-"
-            f"{self.start_month:02d}"
+            f"Mortgage of {self.amount} commencing {self.start_date.year}-"
+            f"{self.start_date.month:02d}"
         )
 
     def get_absolute_url(self):
@@ -465,8 +464,8 @@ class Ledger:
     def next_year_month(self):
         if not self.ledger:
             return {
-                "year": self.mortgage.start_year,
-                "month": self.mortgage.start_month,
+                "year": self.mortgage.start_date.year,
+                "month": self.mortgage.start_date.month,
             }
 
         month = self.ledger[-1].month + 1

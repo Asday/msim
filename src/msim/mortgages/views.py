@@ -29,8 +29,7 @@ from .models import (
 class MortgageCreateUpdateMixin:
     model = Mortgage
     fields = [
-        "start_year",
-        "start_month",
+        "start_date",
         "amount",
         "term",
         "initial_period",
