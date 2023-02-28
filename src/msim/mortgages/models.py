@@ -380,11 +380,12 @@ class LedgerEntry:
         if self.closing_balance > 0:
             self.payment = min(
                 self.payment,
-                abs(self.opening_balance + self.interest),
+                abs(self.opening_balance + self.interest + self.discrepancy),
             )
             self.overpayment = abs(sum([
                 self.opening_balance,
                 self.interest,
+                self.discrepancy,
                 self.payment,
             ]))
 
